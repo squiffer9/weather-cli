@@ -1,0 +1,12 @@
+{
+  "locations": [
+    {
+      "name": "tokyo",
+      "latitude": 35.6914492,
+      "longitude": 139.6985643
+    }
+  ],
+  "temperature_unit": "C",
+  "forecast_interval": 0,
+  "api_key": ""
+}
