@@ -3,16 +3,21 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
 
+var defaultConfigFile = "config.json"
+var defaultTempUnit = "C"
+var defaultForecastHours = 24
+
 // Config represents the application configuration
 type Config struct {
-	Locations       []Location `json:"locations"`
-	TemperatureUnit string     `json:"temperature_unit"`
-	ForecastInterval int       `json:"forecast_interval"`
-	APIKey          string     `json:"api_key"`
+	Locations        []Location `json:"locations"`
+	TemperatureUnit  string     `json:"temperature_unit"`
+	ForecastInterval int        `json:"forecast_interval"`
+	APIKey           string     `json:"api_key"`
 }
 
 // Location represents a saved location
@@ -22,72 +27,51 @@ type Location struct {
 	Longitude float64 `json:"longitude"`
 }
 
-var (
-	defaultConfigFile = "config.json"
-)
-
-const (
-	defaultTempUnit      = "C"
-	defaultForecastHours = 24
-)
-
 // LoadConfig loads the configuration from the config file
 func LoadConfig() (*Config, error) {
-	configPath := defaultConfigFile
-	data, err := os.ReadFile(configPath)
+	if _, err := os.Stat(defaultConfigFile); os.IsNotExist(err) {
+		return createDefaultConfig()
+	}
+
+	file, err := os.ReadFile(defaultConfigFile)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return createDefaultConfig()
-		}
-		return nil, err
+		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
 
 	var config Config
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate and set default values
-	if err := config.validate(); err != nil {
-		return nil, err
+	if err := json.Unmarshal(file, &config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling config: %w", err)
 	}
 
 	return &config, nil
 }
 
-// validate checks the configuration and sets default values if needed
-func (c *Config) validate() error {
-	if c.TemperatureUnit == "" {
-		c.TemperatureUnit = defaultTempUnit
+// SaveConfig saves the configuration to the config file
+func SaveConfig(cfg *Config) error {
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error marshaling config: %w", err)
 	}
-	if c.ForecastInterval <= 0 {
-		c.ForecastInterval = defaultForecastHours
+
+	if err := os.WriteFile(defaultConfigFile, data, 0644); err != nil {
+		return fmt.Errorf("error writing config file: %w", err)
 	}
-	if c.APIKey == "" {
-		return errors.New("API key is missing in the configuration")
-	}
-	if len(c.Locations) == 0 {
-		return errors.New("no locations defined in the configuration")
-	}
+
 	return nil
 }
 
-// SaveConfig saves the configuration to the config file
-func SaveConfig(config *Config) error {
-	data, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return err
+// createDefaultConfig creates a default configuration
+func createDefaultConfig() (*Config, error) {
+	cfg := &Config{
+		TemperatureUnit:  defaultTempUnit,
+		ForecastInterval: defaultForecastHours,
 	}
 
-	configPath := defaultConfigFile
-	// If the directory does not exist, create it
-	dir := filepath.Dir(configPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+	if err := SaveConfig(cfg); err != nil {
+		return nil, fmt.Errorf("error saving default config: %w", err)
 	}
 
-	return os.WriteFile(configPath, data, 0644)
+	return cfg, nil
 }
 
 // AddLocation adds a new location to the configuration
@@ -110,35 +94,42 @@ func (c *Config) RemoveLocation(name string) error {
 	return errors.New("location not found")
 }
 
-// SetTemperatureUnit sets the temperature unit preference
+// SetTemperatureUnit sets the temperature unit in the configuration
 func (c *Config) SetTemperatureUnit(unit string) {
 	c.TemperatureUnit = unit
 }
 
-// SetForecastInterval sets the forecast interval
+// SetForecastInterval sets the forecast interval in the configuration
 func (c *Config) SetForecastInterval(hours int) {
 	c.ForecastInterval = hours
 }
 
-// SetAPIKey sets the OpenWeather API key
-func (c *Config) SetAPIKey(key string) {
-	c.APIKey = key
+// SetAPIKey sets the API key in the configuration
+func (c *Config) SetAPIKey(apiKey string) {
+	c.APIKey = apiKey
 }
 
-// createDefaultConfig creates a default configuration
-func createDefaultConfig() (*Config, error) {
-	config := &Config{
-		TemperatureUnit:  defaultTempUnit,
-		ForecastInterval: defaultForecastHours,
-	}
-	// If the directory does not exist, create it
-	dir := filepath.Dir(defaultConfigFile)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, err
-	}
-	err := SaveConfig(config)
+// GetConfigDir returns the directory where the config file is stored
+func GetConfigDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("error getting user home directory: %w", err)
 	}
-	return config, nil
+
+	configDir := filepath.Join(homeDir, ".weather-cli")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return "", fmt.Errorf("error creating config directory: %w", err)
+	}
+
+	return configDir, nil
+}
+
+func init() {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting config directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	defaultConfigFile = filepath.Join(configDir, "config.json")
 }

@@ -172,3 +172,38 @@ func TestSaveConfigError(t *testing.T) {
 	// Directory permissions are restored after the test
 	os.Chmod(tempDir, 0755)
 }
+
+func TestSetAPIKey(t *testing.T) {
+	config := &Config{}
+
+	testAPIKey := "test-api-key-12345"
+	config.SetAPIKey(testAPIKey)
+
+	if config.APIKey != testAPIKey {
+		t.Errorf("Failed to set API key. Expected %s, got %s", testAPIKey, config.APIKey)
+	}
+}
+
+func TestAPIKeySavedAndLoaded(t *testing.T) {
+	cleanup := setupTestEnvironment(t)
+	defer cleanup()
+
+	testAPIKey := "test-api-key-67890"
+	config := &Config{
+		APIKey: testAPIKey,
+	}
+
+	err := SaveConfig(config)
+	if err != nil {
+		t.Fatalf("Failed to save config with API key: %v", err)
+	}
+
+	loadedConfig, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("Failed to load config: %v", err)
+	}
+
+	if loadedConfig.APIKey != testAPIKey {
+		t.Errorf("Loaded API key does not match saved API key. Expected %s, got %s", testAPIKey, loadedConfig.APIKey)
+	}
+}
