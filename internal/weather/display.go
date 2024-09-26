@@ -20,15 +20,17 @@ func DisplayWeather(data *WeatherData, cfg *config.Config) {
 		date := time.Unix(item.Dt, 0)
 		temp := ConvertTemperature(item.Main.Temp, "C", cfg.TemperatureUnit)
 		feelsLike := ConvertTemperature(item.Main.FeelsLike, "C", cfg.TemperatureUnit)
-		
+
 		fmt.Printf("Date: %s\n", date.Format("2006-01-02 15:04:05"))
 		fmt.Printf("Temperature: %.1f°%s (Feels like: %.1f°%s)\n", temp, cfg.TemperatureUnit, feelsLike, cfg.TemperatureUnit)
 		fmt.Printf("Humidity: %d%%\n", item.Main.Humidity)
 		fmt.Printf("Wind: %.1f m/s\n", item.Wind.Speed)
 		fmt.Printf("Weather: %s\n", item.Weather[0].Description)
 
+		// Display ASCII art for the weather condition
 		fmt.Println(GetWeatherAscii(item.Weather[0].ID))
 
+		// Display precipitation information if available
 		if item.Rain.ThreeH > 0 {
 			fmt.Printf("Rain: %.1f mm\n", item.Rain.ThreeH)
 		}
@@ -57,6 +59,7 @@ func DisplayHelp() {
 	fmt.Println("  weather --unit <C|F>                 Set temperature unit")
 	fmt.Println("  weather --interval <hours>           Set forecast interval")
 	fmt.Println("  weather --list                       List saved locations")
+	fmt.Println("  weather --set-api-key <api_key>      Set the OpenWeather API key")
 	fmt.Println("  weather --help                       Show this help message")
 }
 
@@ -64,7 +67,7 @@ func DisplayHelp() {
 func DisplayError(err error) {
 	if err == nil {
 		fmt.Println("Error: <nil>")
-    } else {
-        fmt.Printf("Error: %s\n", err.Error())
-    }
+	} else {
+		fmt.Printf("Error: %s\n", err)
+	}
 }

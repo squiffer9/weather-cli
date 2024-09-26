@@ -1,9 +1,9 @@
 package weather
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"bytes"
 	"io"
 	"os"
 	"strings"
@@ -221,6 +221,7 @@ func TestDisplayHelp(t *testing.T) {
 		"weather --unit <C|F>",
 		"weather --interval <hours>",
 		"weather --list",
+		"weather --set-api-key <api_key>",
 		"weather --help",
 	}
 
