@@ -18,18 +18,20 @@ const (
 	CommandSetInterval
 	CommandListLocations
 	CommandHelp
+	CommandSetAPIKey
 )
 
 // ParsedArgs holds the parsed command-line arguments
 type ParsedArgs struct {
-	Command    Command
-	Location   string
-	Latitude   float64
-	Longitude  float64
-	Name       string
-	Unit       string
-	Interval   int
-	ShowHelp   bool
+	Command   Command
+	Location  string
+	Latitude  float64
+	Longitude float64
+	Name      string
+	Unit      string
+	Interval  int
+	ShowHelp  bool
+	APIKey    string // New field for API key
 }
 
 // ParseArgs parses the command-line arguments and returns a ParsedArgs struct
@@ -48,6 +50,7 @@ func ParseArgs(args []string) (*ParsedArgs, error) {
 	setUnit := flagSet.String("unit", "", "Set temperature unit (C or F)")
 	setInterval := flagSet.Int("interval", 0, "Set forecast interval in hours")
 	listLocations := flagSet.Bool("list", false, "List saved locations")
+	setAPIKey := flagSet.String("set-api-key", "", "Set the OpenWeather API key")
 
 	// Parse flags
 	err := flagSet.Parse(args[1:])
@@ -71,6 +74,9 @@ func ParseArgs(args []string) (*ParsedArgs, error) {
 		parsed.Command = CommandListLocations
 	case parsed.ShowHelp:
 		parsed.Command = CommandHelp
+	case *setAPIKey != "":
+		parsed.Command = CommandSetAPIKey
+		parsed.APIKey = *setAPIKey
 	default:
 		// If no flags are set, assume it's a get weather command
 		return handleGetWeather(parsed, flagSet.Args())
@@ -79,7 +85,6 @@ func ParseArgs(args []string) (*ParsedArgs, error) {
 	return parsed, nil
 }
 
-// handleAddLocation parses the arguments for adding a new location
 func handleAddLocation(parsed *ParsedArgs, args []string) (*ParsedArgs, error) {
 	if len(args) != 3 {
 		return nil, errors.New("invalid arguments for adding location. Use: -i <latitude> <longitude> <name>")
@@ -103,7 +108,6 @@ func handleAddLocation(parsed *ParsedArgs, args []string) (*ParsedArgs, error) {
 	return parsed, nil
 }
 
-// handleSetUnit parses the arguments for setting the temperature unit
 func handleSetUnit(parsed *ParsedArgs, unit string) (*ParsedArgs, error) {
 	unit = strings.ToUpper(unit)
 	if unit != "C" && unit != "F" {
@@ -116,7 +120,6 @@ func handleSetUnit(parsed *ParsedArgs, unit string) (*ParsedArgs, error) {
 	return parsed, nil
 }
 
-// handleGetWeather parses the arguments for getting the weather forecast
 func handleGetWeather(parsed *ParsedArgs, args []string) (*ParsedArgs, error) {
 	if len(args) == 0 {
 		return nil, errors.New("location is required for getting weather")

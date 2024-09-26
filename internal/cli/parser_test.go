@@ -109,6 +109,16 @@ func TestParseArgs(t *testing.T) {
 			want:    &ParsedArgs{Command: CommandHelp},
 			wantErr: false,
 		},
+		// New test case for setting API key
+		{
+			name: "Set API key",
+			args: []string{"weather", "--set-api-key", "abcdef123456"},
+			want: &ParsedArgs{
+				Command: CommandSetAPIKey,
+				APIKey:  "abcdef123456",
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
