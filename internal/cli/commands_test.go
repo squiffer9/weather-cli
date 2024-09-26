@@ -288,6 +288,25 @@ func TestExecuteListLocations(t *testing.T) {
 	}
 }
 
+func TestExecuteSetAPIKey(t *testing.T) {
+	cfg := &config.Config{}
+
+	args := &ParsedArgs{
+		Command: CommandSetAPIKey,
+		APIKey:  "test_api_key_123",
+	}
+
+	err := executeSetAPIKey(args, cfg)
+
+	if err != nil {
+		t.Errorf("executeSetAPIKey returned an error: %v", err)
+	}
+
+	if cfg.APIKey != "test_api_key_123" {
+		t.Errorf("API key was not set correctly")
+	}
+}
+
 func TestExecuteCommand(t *testing.T) {
 	cfg := &config.Config{
 		Locations: []config.Location{
@@ -468,9 +487,17 @@ func TestExecuteCommand(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Set API Key",
+			args: &ParsedArgs{
+				Command: CommandSetAPIKey,
+				APIKey:  "test_api_key_123",
+			},
+			wantErr: false,
+		},
+		{
 			name: "Unknown Command",
 			args: &ParsedArgs{
-				Command: Command(999), // Unknown command 
+				Command: Command(999), // Unknown command
 			},
 			wantErr: true,
 		},
@@ -504,6 +531,13 @@ func TestExecuteCommand(t *testing.T) {
 					if !bytes.Contains(buf.Bytes(), []byte(expected)) {
 						t.Errorf("ExecuteCommand() output for %s didn't contain expected string: %s", tc.name, expected)
 					}
+				}
+			}
+
+			// Verify the API key is set correctly
+			if tc.name == "Set API Key" {
+				if cfg.APIKey != "test_api_key_123" {
+					t.Errorf("API key was not set correctly")
 				}
 			}
 		})

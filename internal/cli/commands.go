@@ -25,6 +25,8 @@ func ExecuteCommand(args *ParsedArgs, cfg *config.Config) error {
 	case CommandHelp:
 		weather.DisplayHelp()
 		return nil
+	case CommandSetAPIKey:
+		return executeSetAPIKey(args, cfg)
 	default:
 		return fmt.Errorf("unknown command")
 	}
@@ -92,5 +94,15 @@ func executeListLocations(cfg *config.Config) error {
 	locationManager := location.NewManager(cfg)
 	locations := locationManager.ListLocations()
 	weather.DisplayLocationList(locations)
+	return nil
+}
+
+// executeSetAPIKey sets the API key in the configuration
+func executeSetAPIKey(args *ParsedArgs, cfg *config.Config) error {
+	cfg.SetAPIKey(args.APIKey)
+	if err := config.SaveConfig(cfg); err != nil {
+		return fmt.Errorf("failed to save configuration: %w", err)
+	}
+	fmt.Println("API key has been set successfully.")
 	return nil
 }
