@@ -1,3 +1,6 @@
+![Build Status](https://github.com/squiffer9/weather-cli/actions/workflows/go.yaml/badge.svg)
+[![codecov](https://codecov.io/github/squiffer9/weather-cli/graph/badge.svg?token=5C9YAY6ARU)](https://codecov.io/github/squiffer9/weather-cli)
+
 # Weather CLI Application
 
 ## Overview
