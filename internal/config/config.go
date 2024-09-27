@@ -53,7 +53,7 @@ func SaveConfig(cfg *Config) error {
 		return fmt.Errorf("error marshaling config: %w", err)
 	}
 
-	if err := os.WriteFile(defaultConfigFile, data, 0644); err != nil {
+	if err := os.WriteFile(defaultConfigFile, data, 0600); err != nil {
 		return fmt.Errorf("error writing config file: %w", err)
 	}
 
@@ -117,7 +117,7 @@ func GetConfigDir() (string, error) {
 	}
 
 	configDir := filepath.Join(homeDir, ".weather-cli")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0750); err != nil {
 		return "", fmt.Errorf("error creating config directory: %w", err)
 	}
 
